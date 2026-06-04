@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Thám Hiểm Thú Rừng</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{width:100vw;height:100vh;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;touch-action:none;}
+#G{width:390px;height:844px;position:relative;overflow:hidden;background:#2d5a27;}
+#mv{position:absolute;inset:0;overflow:hidden;}
+#mw{width:1536px;height:1536px;position:absolute;will-change:transform;}
+#map-svg{position:absolute;top:0;left:0;width:1536px;height:1536px;pointer-events:none;}
+.tree{position:absolute;transform:translate(-50%,-60%);pointer-events:none;z-index:5;line-height:1;filter:drop-shadow(2px 4px 4px rgba(0,0,0,.4));}
+.myst{position:absolute;width:60px;height:60px;background:radial-gradient(circle,#FFE066,#FF9F00);border-radius:50%;border:4px solid #FFF;display:flex;align-items:center;justify-content:center;font-size:22px;z-index:15;transform:translate(-50%,-50%);box-shadow:0 0 22px rgba(255,200,0,.9);animation:starpulse 1.4s ease-in-out infinite;cursor:pointer;flex-direction:column;}
+.myst.done{background:radial-gradient(circle,#A5D6A7,#2E7D32);box-shadow:0 0 14px rgba(76,175,80,.7);animation:none;}
+@keyframes starpulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.18);}}
+.myst-lbl{font-size:8px;font-weight:700;color:#333;background:rgba(255,255,255,.85);border-radius:6px;padding:1px 5px;line-height:1.4;white-space:nowrap;}
+.myst-ring{position:absolute;width:150px;height:150px;border-radius:50%;border:2px dashed rgba(255,215,0,.35);transform:translate(-50%,-50%);pointer-events:none;z-index:13;animation:rpulse 2.2s linear infinite;}
+@keyframes rpulse{0%{transform:translate(-50%,-50%) scale(.8);opacity:.7;}100%{transform:translate(-50%,-50%) scale(1.15);opacity:0;}}
+/* ===== POLISHED ASSETS OVERRIDE ===== */
+#player{position:absolute;width:90px;height:90px;z-index:20;pointer-events:none;}
+#player img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+.myst{position:absolute;width:60px;height:60px;background:linear-gradient(145deg,#FFE566,#FFAA00);border-radius:16px;border:3px solid #fff;display:flex;align-items:center;justify-content:center;z-index:15;transform:translate(-50%,-50%);box-shadow:0 0 22px rgba(255,200,0,.9),0 5px 0 rgba(160,80,0,.5);animation:starpulse 1.4s ease-in-out infinite;cursor:pointer;flex-direction:column;gap:1px;}
+.myst.done{background:linear-gradient(145deg,#A5D6A7,#2E7D32);box-shadow:0 0 14px rgba(76,175,80,.7),0 4px 0 rgba(20,60,20,.5);animation:none;}
+.mcard{position:absolute;width:56px;height:56px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:28px;z-index:14;transform:translate(-50%,-50%);animation:cardfl 2s ease-in-out infinite;cursor:pointer;overflow:hidden;}
+.mcard::before{display:none;}
+.mcard.threatened{background:radial-gradient(circle at 40% 35%,#FFF8E8,#D4B483);border:4px solid #FFD700;box-shadow:0 4px 14px rgba(200,150,0,.7),inset 0 1px 0 rgba(255,255,255,.6);}
+.mcard.rare{background:radial-gradient(circle at 40% 35%,#2D8A5F,#1B4332);border:4px solid #4CAF50;box-shadow:0 4px 14px rgba(76,175,80,.7),inset 0 1px 0 rgba(255,255,255,.2);}
+.mcard img{width:40px;height:40px;object-fit:contain;}
+.mcard-type{font-size:10px;margin-top:1px;line-height:1;}
+#jb{width:120px;height:120px;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border:3px solid rgba(255,255,255,.3);border-radius:50%;box-shadow:0 4px 16px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15);}
+#jk{width:48px;height:48px;background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.9),rgba(220,220,220,.7));border-radius:50%;position:absolute;pointer-events:none;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.8);}
+.nico{font-size:0;line-height:1;height:34px;display:flex;align-items:center;justify-content:center;}
+.nico img{width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));}
+.nlb{color:#fff;font-size:8px;font-weight:800;text-shadow:1px 1px 0 rgba(0,0,0,.5);letter-spacing:.3px;}
+#bnav{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(180deg,#C2185B,#7B0636);border-top:3px solid #FFD740;display:flex;z-index:100;box-shadow:0 -3px 14px rgba(0,0,0,.5);}
+.ni:hover,.ni.act{background:rgba(255,255,255,.18);}
+.ni.act .nlb{color:#FFD740;}
+.bk{position:absolute;top:10px;left:10px;width:46px;height:42px;background:linear-gradient(180deg,#F06292,#C2185B);border:2px solid rgba(255,255,255,.25);border-radius:12px;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 4px 0 #7B0636;display:flex;align-items:center;justify-content:center;}
+.hres{height:38px;background:linear-gradient(180deg,#1e3550,#0d1b2a);border-radius:20px;border:2px solid #2a4a6f;display:flex;align-items:center;padding:0 8px 0 6px;gap:4px;flex:1;min-width:0;box-shadow:inset 0 2px 4px rgba(0,0,0,.4);}
+#pbar{position:absolute;top:58px;left:10px;background:linear-gradient(90deg,#E91E63,#C2185B);border-radius:12px;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px;border:2.5px solid #FFD740;box-shadow:0 4px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);}
+.pav{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#FFD740,#FFA000);border:2px solid rgba(255,255,255,.4);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pav img{width:100%;height:100%;object-fit:contain;}
+#zind{position:absolute;top:112px;left:10px;background:linear-gradient(135deg,rgba(0,0,0,.78),rgba(5,15,35,.85));border:2px solid #FFD740;border-radius:12px;padding:5px 10px 5px 5px;z-index:100;display:flex;align-items:center;gap:5px;}
+.zind-icon{width:30px;height:30px;object-fit:contain;flex-shrink:0;}
+.zind-right{flex:1;}
+.ztl{color:#FFD740;font-size:10px;font-weight:700;}
+#andisp{width:160px;height:160px;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;animation:anbounce 1.2s ease-in-out infinite;}
+#andisp img{width:125px;height:125px;object-fit:contain;filter:drop-shadow(2px 4px 8px rgba(0,0,0,.6));}
+#andisp .an-emoji{font-size:90px;}
+#reqicon img{width:44px;height:44px;object-fit:contain;}
+.fi{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.1);border:2px solid rgba(255,200,100,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;transition:all .15s;}
+.btn-exit{background:linear-gradient(180deg,#FFE740,#FFC400);color:#333;box-shadow:0 4px 0 #CC7000;border:2px solid rgba(255,255,255,.3);}
+.btn-stay{background:linear-gradient(180deg,#F06292,#E91E63);color:#fff;box-shadow:0 4px 0 #880E4F;border:2px solid rgba(255,255,255,.2);}
+.btn-ctr{background:linear-gradient(180deg,#4B9FFF,#1565C0);color:#fff;box-shadow:0 3px 0 #0D47A1;border:2px solid rgba(255,255,255,.2);}
+.btn-map{background:linear-gradient(180deg,#FFB74D,#FF9800);color:#fff;box-shadow:0 3px 0 #C45D00;border:2px solid rgba(255,255,255,.2);}
+.btn-rep{background:linear-gradient(180deg,#F06292,#E91E63);color:#fff;box-shadow:0 3px 0 #880E4F;border:2px solid rgba(255,255,255,.2);}
+.myst-lbl{font-size:8px;font-weight:800;color:#5D2E00;background:rgba(255,255,255,.9);border-radius:6px;padding:1px 5px;line-height:1.4;white-space:nowrap;}
+.tutcard{background:#fff;border-radius:24px;padding:26px;width:100%;max-width:320px;text-align:center;border:4px solid #E91E63;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+#vicpop .pbx{box-shadow:0 8px 30px rgba(0,0,0,.6);}
+.vhd{background:linear-gradient(135deg,#E91E63,#D81B60);padding:12px 16px;text-align:center;}
+#defpop .pbx{box-shadow:0 8px 30px rgba(0,0,0,.6);}
+.dhd{background:linear-gradient(135deg,#4B9FFF,#1565C0);padding:12px 16px;text-align:center;}
+.mcard{position:absolute;width:48px;height:68px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:26px;z-index:14;transform:translate(-50%,-50%);animation:cardfl 2s ease-in-out infinite;cursor:pointer;overflow:hidden;}
+.mcard::before{content:'';position:absolute;top:-2px;left:8px;width:13px;height:70%;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.5) 50%,transparent 62%);transform:rotate(-10deg);border-radius:4px;pointer-events:none;}
+.mcard-type{font-size:9px;color:rgba(255,255,255,.8);margin-top:2px;}
+.mcard.threatened{background:linear-gradient(135deg,#F5F0E8,#EDE0C8,#F5F0E8);border:3px solid #E8E8E8;box-shadow:0 4px 16px rgba(220,220,200,.6);}
+.mcard.threatened .mcard-type{color:rgba(80,60,30,.8);}
+.mcard.rare{background:linear-gradient(135deg,#1B4332,#2D6A4F,#1B4332);border:3px solid #43A047;box-shadow:0 4px 16px rgba(67,160,71,.6);}
+@keyframes cardfl{0%,100%{transform:translate(-50%,-50%) translateY(0);}50%{transform:translate(-50%,-50%) translateY(-9px);}}
+#player{position:absolute;width:100px;height:100px;z-index:20;pointer-events:none;}
+#hud{position:absolute;top:0;left:0;right:0;z-index:100;pointer-events:none;}
+#hud>*{pointer-events:all;}
+.hbar{position:absolute;top:10px;left:66px;right:10px;height:42px;display:flex;gap:5px;}
+.bk{position:absolute;top:10px;left:10px;width:46px;height:42px;background:#E91E63;border:none;border-radius:12px;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 4px 0 #880E4F;display:flex;align-items:center;justify-content:center;}
+.hres{height:38px;background:#0d1b2a;border-radius:20px;border:2px solid #1e3a5f;display:flex;align-items:center;padding:0 7px 0 5px;gap:3px;flex:1;min-width:0;}
+.hres .ic{font-size:17px;flex-shrink:0;}
+.hres .vl{color:#fff;font-size:13px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hres .pl{width:20px;height:20px;background:#1565C0;border-radius:50%;border:none;color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1;}
+#pbar{position:absolute;top:58px;left:10px;background:linear-gradient(90deg,#E91E63,#F06292);border-radius:12px;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px;border:2.5px solid #FFD740;box-shadow:0 3px 10px rgba(0,0,0,.35);}
+.pav{width:38px;height:38px;border-radius:8px;background:#FFD740;border:2px solid #FFA000;font-size:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pnm{color:#fff;font-size:12px;font-weight:700;text-shadow:1px 1px 0 rgba(0,0,0,.35);}
+.pexp{display:flex;align-items:center;gap:4px;margin-top:2px;}
+.plv{background:#FFD740;color:#333;border-radius:50%;width:17px;height:17px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pew{flex:1;height:10px;background:rgba(0,0,0,.3);border-radius:5px;overflow:hidden;}
+.pef{height:100%;background:linear-gradient(90deg,#29B6F6,#00E5FF);border-radius:5px;width:62%;}
+.pet{color:#fff;font-size:8px;white-space:nowrap;}
+#zind{position:absolute;top:112px;left:10px;background:rgba(0,0,0,.72);border:2px solid #FFD740;border-radius:10px;padding:5px 10px;z-index:100;}
+.ztl{color:#FFD740;font-size:11px;font-weight:700;}
+.zbw{height:11px;background:rgba(255,255,255,.2);border-radius:6px;margin-top:3px;overflow:hidden;position:relative;min-width:150px;}
+.zbf{height:100%;background:linear-gradient(90deg,#FFD740,#FFA000);border-radius:6px;transition:width .5s;}
+.zbt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;}
+#jc{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);z-index:100;}
+#jb{width:120px;height:120px;background:rgba(255,255,255,.13);border:3px solid rgba(255,255,255,.28);border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
+#jk{width:48px;height:48px;background:rgba(255,255,255,.72);border-radius:50%;position:absolute;border:3px solid rgba(255,255,255,.9);pointer-events:none;left:50%;top:50%;transform:translate(-50%,-50%);}
+.ja{position:absolute;font-size:11px;opacity:.45;pointer-events:none;color:#fff;}
+.ja.u{top:3px;left:50%;transform:translateX(-50%);}
+.ja.d{bottom:3px;left:50%;transform:translateX(-50%);}
+.ja.l{left:3px;top:50%;transform:translateY(-50%);}
+.ja.r{right:3px;top:50%;transform:translateY(-50%);}
+#bnav{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(180deg,#D81B60,#880E4F);border-top:3px solid #FFD740;display:flex;z-index:100;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;padding:6px 2px;transition:background .15s;}
+.ni:hover,.ni.act{background:rgba(255,255,255,.15);}
+.nico{font-size:26px;line-height:1;}
+.nlb{color:#fff;font-size:8px;font-weight:700;text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+/* MINI-GAME */
+#mgs{position:absolute;inset:0;display:none;flex-direction:column;z-index:200;background:linear-gradient(180deg,#0d3320 0%,#1a5c35 30%,#2d7a40 60%,#1a4a25 100%);}
+#mgs.on{display:flex;}
+#mgs::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(0,80,0,.4) 0%,transparent 50%),radial-gradient(ellipse at 90% 15%,rgba(0,60,0,.4) 0%,transparent 50%);pointer-events:none;z-index:0;}
+#mgs>*{position:relative;z-index:1;}
+#mgt{display:flex;align-items:center;gap:8px;padding:10px 12px 6px;background:rgba(0,0,0,.35);border-bottom:2px solid rgba(255,200,50,.3);}
+#mgexit{width:42px;height:42px;background:#E91E63;border:none;border-radius:10px;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 3px 0 #880E4F;flex-shrink:0;}
+.mgtbl{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.4);border-radius:10px;padding:5px 10px;border:2px solid rgba(255,180,0,.4);}
+.mgtbl .lic{font-size:20px;}
+.mgtbl .lval{color:#FFD740;font-size:18px;font-weight:700;font-family:monospace;min-width:48px;}
+.mgtbl .lnm{color:rgba(255,255,255,.6);font-size:9px;}
+.obj-box{background:rgba(255,200,50,.15);border:2px solid rgba(255,200,50,.5);border-radius:10px;padding:4px 10px;text-align:center;}
+.obj-lbl{color:rgba(255,255,255,.6);font-size:8px;}
+.obj-val{color:#FFD740;font-size:16px;font-weight:700;}
+#cdov{position:absolute;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:50;flex-direction:column;gap:8px;}
+#cdov.on{display:flex;}
+#cdnum{font-size:100px;color:#FFD740;font-weight:900;text-shadow:0 0 30px rgba(255,200,0,.8),3px 3px 0 rgba(0,0,0,.5);animation:cdbounce .6s ease-out;}
+@keyframes cdbounce{0%{transform:scale(1.5);opacity:0;}100%{transform:scale(1);opacity:1;}}
+#mgan{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;position:relative;}
+#reqwrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px;}
+#reqicon{width:68px;height:68px;background:rgba(0,0,0,.45);border:4px solid rgba(255,255,255,.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:32px;transition:border-color .25s,background .25s;}
+#reqicon.ok{border-color:#00E676;background:rgba(0,230,118,.2);}
+#reqicon.ng{border-color:#FF1744;background:rgba(255,23,68,.2);}
+#reqarrow{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:12px solid rgba(255,255,255,.25);}
+#andisp{width:155px;height:155px;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:90px;line-height:1;animation:anbounce 1.2s ease-in-out infinite;}
+@keyframes anbounce{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-10px) scale(1.06);}}
+#annm{color:#fff;font-size:17px;font-weight:700;text-shadow:2px 2px 5px rgba(0,0,0,.7);margin-top:6px;text-align:center;}
+.combobadge{position:absolute;top:10px;right:10px;background:rgba(255,215,0,.2);border:2px solid #FFD740;border-radius:20px;padding:4px 10px;color:#FFD740;font-size:13px;font-weight:700;}
+#scpopwrap{position:absolute;inset:0;pointer-events:none;}
+.scpop{position:absolute;font-size:22px;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.8);animation:scfloat .9s ease-out forwards;pointer-events:none;}
+@keyframes scfloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.2);}}
+#mgpu{display:flex;justify-content:center;gap:10px;padding:5px 12px;}
+.pub{width:72px;height:62px;border-radius:14px;border:3px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:all .2s;color:#fff;}
+.pub:hover:not(.dis){background:rgba(255,255,255,.15);transform:scale(1.05);}
+.pub.dis{opacity:.38;cursor:not-allowed;}
+.pub.dis:hover{transform:none;}
+.puic{font-size:22px;}.pulb{font-size:7px;text-align:center;line-height:1.2;}.pucnt{font-size:10px;color:#FFD740;font-weight:700;}
+#puhint{border-color:#FF9800;background:rgba(255,152,0,.2);}
+#putime{border-color:#00BCD4;background:rgba(0,188,212,.2);}
+#pufocus{border-color:#9C27B0;background:rgba(156,39,176,.2);}
+#fttray{padding:10px 10px 14px;background:linear-gradient(180deg,rgba(80,40,0,.85),rgba(60,25,0,.9));border-top:3px solid rgba(180,100,0,.6);}
+#fttray::before{content:'ĐỒ ĂN';display:block;text-align:center;color:rgba(255,200,100,.55);font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:6px;}
+#ftgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.fi{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,200,100,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;}
+.fi:active{transform:scale(.93);}
+.fi:hover,.fi:active{background:rgba(255,255,255,.22);border-color:#FFD740;}
+.fi.hi{border-color:#00E676;background:rgba(0,230,118,.2);}
+.fi.wr{border-color:#FF1744;background:rgba(255,23,68,.2);}
+.fiem{font-size:22px;line-height:1;}
+.finm{font-size:6px;color:rgba(255,255,255,.65);text-align:center;}
+
+/* ===== COLLECTION (image 1 wooden style) ===== */
+#cols{position:absolute;inset:0;display:none;flex-direction:column;z-index:200;background:#1A0E06;}
+#cols.on{display:flex;}
+.wooden-bg{background:radial-gradient(ellipse at 50% 0%,#3A1F0A 0%,#1A0E06 60%);}
+#col-frame{flex:1;display:flex;flex-direction:column;overflow:hidden;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23261208'/%3E%3Cline x1='0' y1='30' x2='60' y2='30' stroke='%2330180A' stroke-width='1'/%3E%3Cline x1='30' y1='0' x2='30' y2='60' stroke='%2330180A' stroke-width='1'/%3E%3C/svg%3E");}
+.col-border{border:3px solid #7B4F0E;box-shadow:inset 0 0 30px rgba(0,0,0,.5),0 0 20px rgba(0,0,0,.5);}
+#col-titlebar{background:linear-gradient(90deg,#5D2E00,#A0570A,#C87820,#A0570A,#5D2E00);padding:10px 16px;text-align:center;border-bottom:3px solid #7B4F0E;flex-shrink:0;position:relative;}
+#col-titlebar h2{color:#FFE080;font-size:20px;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.6),0 0 20px rgba(255,200,0,.3);}
+#col-subtitle{color:#C8A060;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;}
+#colcl2{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:32px;height:32px;background:rgba(0,0,0,.4);border:2px solid #7B4F0E;border-radius:50%;color:#C8A060;font-size:16px;cursor:pointer;}
+#col-scroll{flex:1;overflow-y:auto;padding:12px;}
+#col-scroll::-webkit-scrollbar{width:4px;}
+#col-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.3);}
+#col-scroll::-webkit-scrollbar-thumb{background:#7B4F0E;border-radius:2px;}
+.sp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+/* Species card (image 1 style) */
+.sp-card{border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s;border:3px solid #7B4F0E;background:#2A1408;}
+.sp-card:hover{transform:scale(1.03);}
+.sp-card.threatened-frame{border-color:#C8C8B0;}
+.sp-card.rare-frame{border-color:#2E7D32;}
+.sp-img-area{height:90px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.sp-img-area.threatened-bg{background:linear-gradient(180deg,#D4B483,#B8935A);}
+.sp-img-area.rare-bg{background:linear-gradient(180deg,#1B3A20,#2D5A35);}
+.sp-rarity-badge{position:absolute;top:5px;left:5px;border-radius:4px;padding:2px 6px;font-size:8px;font-weight:700;}
+.sp-rarity-badge.threatened{background:#FF6B35;color:#fff;}
+.sp-rarity-badge.rare{background:#43A047;color:#fff;}
+.sp-rarity-badge.nguy-cap{background:#FF5722;color:#fff;}
+.sp-em{font-size:52px;filter:drop-shadow(2px 3px 5px rgba(0,0,0,.5));}
+.sp-bottom{background:#1A0E06;padding:6px 6px 5px;}
+.sp-title{color:#DDA060;font-size:11px;font-weight:700;text-align:center;}
+.sp-prog-bar{height:6px;background:rgba(255,255,255,.15);border-radius:3px;margin-top:4px;overflow:hidden;}
+.sp-prog-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#8BC34A);border-radius:3px;transition:width .4s;}
+.sp-prog-text{color:rgba(200,160,80,.8);font-size:8px;text-align:center;margin-top:2px;}
+/* Col bottom tabs */
+#col-tabs{height:52px;background:linear-gradient(90deg,#3A1F0A,#2A1408);border-top:2px solid #7B4F0E;display:flex;flex-shrink:0;}
+.col-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700;color:#C8A060;cursor:pointer;border:none;background:transparent;}
+.col-tab.active{background:rgba(200,160,80,.15);color:#FFE080;}
+
+/* SPECIES DETAIL POPUP */
+#sp-detail{position:absolute;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+#sp-detail.on{display:flex;}
+#sp-detail-card{width:100%;max-height:90%;background:linear-gradient(180deg,#3A1F0A,#2A1408);border:3px solid #7B4F0E;border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column;}
+#sp-det-top{padding:14px 14px 10px;background:linear-gradient(90deg,#5D2E00,#8B4500);border-bottom:2px solid #7B4F0E;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#sp-det-img{width:64px;height:64px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:44px;flex-shrink:0;}
+.sp-det-img-threatened{background:linear-gradient(135deg,#B8935A,#D4B483);}
+.sp-det-img-rare{background:linear-gradient(135deg,#1B3A20,#2D5A35);}
+#sp-det-info{flex:1;}
+#sp-det-name{color:#FFE080;font-size:16px;font-weight:700;}
+#sp-det-rarity{font-size:10px;margin-top:2px;}
+.det-rarity-threatened{color:#FF8A65;}
+.det-rarity-rare{color:#81C784;}
+#sp-det-close{width:32px;height:32px;background:rgba(0,0,0,.5);border:2px solid #7B4F0E;border-radius:50%;color:#C8A060;font-size:16px;cursor:pointer;flex-shrink:0;}
+/* Milestones */
+#sp-milestones{padding:10px 14px 8px;background:rgba(0,0,0,.2);flex-shrink:0;}
+.ms-title{color:rgba(200,160,80,.7);font-size:10px;text-align:center;margin-bottom:8px;}
+.ms-row{display:flex;align-items:center;gap:0;}
+.ms-icon-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.ms-icon{font-size:24px;}
+.ms-check{width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:10px;}
+.ms-check.done{background:#4CAF50;border-color:#4CAF50;}
+.ms-check.active{background:rgba(255,200,0,.3);border-color:#FFD740;}
+.ms-line{flex:1;height:4px;background:rgba(255,255,255,.15);margin:0 2px;}
+.ms-line.done{background:linear-gradient(90deg,#4CAF50,#8BC34A);}
+.ms-progress-bar{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-top:6px;position:relative;}
+.ms-progress-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#8BC34A);border-radius:4px;transition:width .5s;}
+/* Card type grid */
+#sp-types{padding:8px 12px;flex-shrink:0;}
+.sp-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.sp-type-btn{border-radius:8px;padding:6px 4px;background:rgba(255,255,255,.08);border:2px solid rgba(200,160,80,.3);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all .2s;}
+.sp-type-btn:hover:not(.sp-type-locked){background:rgba(200,160,80,.15);border-color:rgba(200,160,80,.7);}
+.sp-type-btn.sp-type-active{background:rgba(200,160,80,.2);border-color:#FFD740;}
+.sp-type-btn.sp-type-locked{opacity:.35;cursor:default;}
+.sp-type-em{font-size:20px;}
+.sp-type-lbl{font-size:7px;color:#C8A060;text-align:center;line-height:1.2;font-weight:700;}
+/* Content box */
+#sp-content-box{padding:8px 12px 14px;flex-shrink:0;}
+#sp-content-inner{background:rgba(0,0,0,.35);border:2px solid rgba(200,160,80,.2);border-radius:10px;padding:10px;min-height:50px;}
+#sp-content-title{color:#FFD740;font-size:11px;font-weight:700;margin-bottom:5px;}
+#sp-content-text{color:rgba(220,190,140,.85);font-size:11px;line-height:1.55;}
+
+/* ===== MISSION SCREEN (image 3 wooden style) ===== */
+#quests{position:absolute;inset:0;display:none;flex-direction:column;z-index:200;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23556B2F'/%3E%3Cpath d='M0 0L4 4M4 0L0 4' stroke='%234A5E28' stroke-width='0.5'/%3E%3C/svg%3E") #4a7035;}
+#quests.on{display:flex;}
+#quest-header{background:linear-gradient(180deg,#1a3010,#2a4a18);padding:0 0 0;flex-shrink:0;border-bottom:3px solid #8B6914;}
+#quest-title-plank{background:linear-gradient(90deg,#4A2800,#8B5E14,#C87820,#8B5E14,#4A2800);padding:12px 16px;text-align:center;}
+#quest-title-plank h2{color:#FFE080;font-size:18px;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.6);}
+#quest-timer-row{background:rgba(0,0,0,.3);padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:8px;}
+#quest-timer-row span{color:#DEB887;font-size:12px;}
+#quest-timer{color:#FFD740;font-size:13px;font-weight:700;font-family:monospace;}
+/* Progress track */
+#quest-progress-section{background:rgba(210,180,120,.15);border:2px solid rgba(180,140,60,.4);margin:10px 12px 6px;border-radius:12px;padding:10px 12px;}
+.qp-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.qp-circle{width:44px;height:44px;background:linear-gradient(135deg,#5D3A1A,#8B5E14);border-radius:50%;border:3px solid #C87820;display:flex;align-items:center;justify-content:center;color:#FFD740;font-size:13px;font-weight:900;}
+.qp-title{color:#DEB887;font-size:11px;font-weight:700;}
+.qp-track{flex:1;position:relative;}
+.qp-bar{height:16px;background:linear-gradient(90deg,#1B3A08,#2A5A10);border-radius:8px;border:2px solid rgba(180,140,60,.4);overflow:hidden;position:relative;}
+.qp-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#8BC34A);border-radius:6px;transition:width .5s;}
+.qp-milestones{display:flex;justify-content:space-between;margin-top:4px;}
+.qp-ms{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;}
+.qp-ms-icon{font-size:22px;}
+.qp-ms-val{color:rgba(220,190,140,.7);font-size:9px;font-weight:700;}
+/* Mission list */
+#quest-list{flex:1;overflow-y:auto;padding:0 12px 8px;}
+#quest-list::-webkit-scrollbar{width:3px;}
+#quest-list::-webkit-scrollbar-thumb{background:#8B6914;border-radius:2px;}
+.qitem{background:linear-gradient(135deg,rgba(210,180,120,.12),rgba(180,140,60,.08));border:2px solid rgba(180,140,60,.35);border-radius:12px;padding:10px 10px;margin-bottom:8px;display:flex;gap:8px;align-items:center;}
+.qitem-left{flex:1;}
+.qitem-desc{color:#F5DEB3;font-size:12px;font-weight:700;line-height:1.3;margin-bottom:6px;}
+.qitem-pbar{height:10px;background:rgba(0,0,0,.35);border-radius:5px;overflow:hidden;position:relative;}
+.qitem-pfill{height:100%;border-radius:5px;transition:width .4s;}
+.qitem-pfill.complete{background:linear-gradient(90deg,#4CAF50,#8BC34A);}
+.qitem-pfill.partial{background:linear-gradient(90deg,#8B6914,#C87820);}
+.qitem-pfill.empty{background:rgba(100,100,100,.3);}
+.qitem-ptext{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;}
+.qitem-right{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:80px;}
+.qitem-rewards{display:flex;gap:4px;align-items:center;justify-content:center;}
+.qitem-rw{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.qitem-rw-ic{font-size:20px;}
+.qitem-rw-val{color:#FFD740;font-size:8px;font-weight:700;}
+.qbtn-claim{padding:7px 14px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(90deg,#2196F3,#1565C0);color:#fff;box-shadow:0 3px 0 #0D47A1;}
+.qbtn-go{padding:7px 14px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(90deg,#4CAF50,#2E7D32);color:#fff;box-shadow:0 3px 0 #1B5E20;}
+.qbtn-done{padding:7px 14px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:default;background:rgba(100,100,100,.3);color:rgba(200,200,200,.5);}
+/* Quest bottom tabs */
+#quest-tabs{height:60px;background:linear-gradient(90deg,#2A1408,#3A1F0A);border-top:3px solid #8B6914;display:flex;align-items:center;flex-shrink:0;}
+.qtab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:700;color:#C8A060;cursor:pointer;border:none;background:transparent;height:100%;padding:4px;}
+.qtab.active{background:rgba(200,160,80,.15);color:#FFE080;border-top:3px solid #FFD740;}
+.qtab-icon{font-size:22px;}
+
+/* POPUPS */
+.pov{position:absolute;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:500;}
+.pov.on{display:flex;}
+#expop .pbx{background:#fff;border-radius:20px;width:280px;border:4px solid #E91E63;position:relative;overflow:hidden;}
+#expop .ptl{background:#E91E63;color:#fff;font-size:17px;font-weight:700;padding:10px 16px;text-align:center;letter-spacing:1px;}
+#expop .pxbtn{position:absolute;top:6px;right:6px;width:26px;height:26px;background:#FF5722;border:none;border-radius:50%;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#expop .pbody{padding:20px 20px 18px;}
+#expop .pmtxt{font-size:14px;color:#333;text-align:center;line-height:1.55;margin-bottom:8px;}
+#expop .pntxt{font-size:10px;color:#888;text-align:center;line-height:1.4;margin-bottom:18px;}
+.pbtns{display:flex;gap:10px;justify-content:center;}
+.pbtns button{padding:11px 22px;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-exit{background:#FFD740;color:#333;box-shadow:0 4px 0 #FFA000;}
+.btn-stay{background:#E91E63;color:#fff;box-shadow:0 4px 0 #880E4F;}
+#vicpop .pbx{background:#fff;border-radius:20px;width:295px;border:4px solid #FFD740;overflow:hidden;}
+.vhd{background:linear-gradient(90deg,#E91E63,#F06292);padding:10px 16px;text-align:center;}
+.vtl{color:#fff;font-size:20px;font-weight:900;}
+.vpig{font-size:64px;display:block;text-align:center;filter:drop-shadow(0 0 12px rgba(255,215,0,.8));animation:vibb .6s ease-out;}
+@keyframes vibb{0%{transform:scale(.6);}70%{transform:scale(1.1);}100%{transform:scale(1);}}
+.vsc{color:#E91E63;font-size:22px;font-weight:900;text-align:center;margin:4px 0;}
+.vrw{background:#f5f5f5;border-radius:12px;padding:10px;margin:8px 16px;}
+.vrwlb{font-size:10px;color:#aaa;text-align:center;letter-spacing:1px;margin-bottom:8px;}
+.vrwlist{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.rwit{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.rwic{font-size:28px;}
+.rwam{font-size:11px;font-weight:700;color:#333;text-align:center;}
+.rw-card{width:44px;height:62px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;overflow:hidden;}
+.rw-card.threatened{background:linear-gradient(135deg,#D4B483,#B8935A);border:2px solid #E8E8E8;}
+.rw-card.rare{background:linear-gradient(135deg,#1B4332,#2D6A4F);border:2px solid #43A047;}
+.rw-card::before{content:'';position:absolute;top:-2px;left:5px;width:9px;height:70%;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.45) 50%,transparent 62%);transform:rotate(-10deg);}
+.rw-card-em{font-size:22px;z-index:1;}
+.rw-card-lbl{font-size:7px;color:rgba(255,255,255,.8);font-weight:700;z-index:1;text-align:center;}
+.vbtns{display:flex;gap:7px;justify-content:center;padding:8px 16px 12px;}
+.vbtns button{padding:9px 13px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-ctr{background:#4B9FFF;color:#fff;box-shadow:0 3px 0 #1565C0;}
+.btn-map{background:#FF9800;color:#fff;box-shadow:0 3px 0 #E65100;}
+.btn-rep{background:#E91E63;color:#fff;box-shadow:0 3px 0 #880E4F;}
+#defpop .pbx{background:#fff;border-radius:20px;width:295px;border:4px solid #4B9FFF;overflow:hidden;}
+.dhd{background:linear-gradient(90deg,#4B9FFF,#29B6F6);padding:10px 16px;text-align:center;}
+.dtl{color:#fff;font-size:20px;font-weight:900;}
+.dpig{font-size:64px;display:block;text-align:center;}
+.dtxt{font-size:12px;color:#555;text-align:center;padding:4px 20px;}
+.dnrw{background:#f5f5f5;border-radius:12px;margin:8px 20px;padding:10px;display:flex;gap:14px;justify-content:center;}
+.nrit{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#666;text-align:center;}
+.nric{font-size:28px;}
+.toast{position:absolute;bottom:108px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);color:#fff;padding:9px 18px;border-radius:24px;font-size:12px;font-weight:700;z-index:400;border:2px solid #FFD740;white-space:nowrap;animation:tin .25s ease-out,tout .25s 2.3s ease-in forwards;pointer-events:none;}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(14px);}}
+@keyframes tout{to{opacity:0;transform:translateX(-50%) translateY(14px);}}
+#tutov{position:absolute;inset:0;background:rgba(0,0,0,.82);z-index:600;display:flex;align-items:center;justify-content:center;padding:28px;}
+.tutcard{background:#fff;border-radius:22px;padding:24px;width:100%;max-width:320px;text-align:center;border:4px solid #E91E63;}
+.tutem{font-size:58px;display:block;margin-bottom:14px;}
+.tuttxt{font-size:13px;color:#444;line-height:1.65;margin-bottom:18px;}
+.tutdots{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
+.tdot{width:10px;height:10px;border-radius:50%;background:#ddd;transition:background .2s;}
+.tdot.on{background:#E91E63;}
+.tutnxt{padding:12px 28px;background:#E91E63;border:none;border-radius:24px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #880E4F;}
+</style>
+</head>
+<body>
+<div id="G">
+<div id="mv"><div id="mw">
+  <svg id="map-svg" viewBox="0 0 1536 1536" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="gg" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="#6abf52"/><stop offset="100%" stop-color="#3d8030"/></radialGradient>
+      <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>
+    <rect width="1536" height="1536" fill="url(#gg)"/>
+    <!-- Grass texture patches -->
+    <circle cx="200" cy="200" r="200" fill="#5ab044" opacity=".3"/>
+    <circle cx="800" cy="600" r="250" fill="#6ec055" opacity=".22"/>
+    <circle cx="1300" cy="900" r="220" fill="#3d8030" opacity=".28"/>
+    <circle cx="400" cy="1200" r="260" fill="#58b042" opacity=".22"/>
+    <circle cx="650" cy="350" r="180" fill="#72c85c" opacity=".2"/>
+    <circle cx="1100" cy="1300" r="200" fill="#4a9c3a" opacity=".25"/>
+    <circle cx="200" cy="900" r="160" fill="#5ab044" opacity=".18"/>
+    <!-- Dark grass spots -->
+    <circle cx="500" cy="800" r="120" fill="#2d6e22" opacity=".15"/>
+    <circle cx="1200" cy="400" r="140" fill="#2d6e22" opacity=".12"/>
+    <circle cx="800" cy="1200" r="130" fill="#2d6e22" opacity=".15"/>
+    <path d="M0,320 Q300,290 600,340 Q900,390 1100,310 Q1300,240 1536,300" stroke="#c4934a" stroke-width="90" fill="none" stroke-linecap="round" opacity=".85"/>
+    <path d="M0,320 Q300,290 600,340 Q900,390 1100,310 Q1300,240 1536,300" stroke="#d4a55a" stroke-width="58" fill="none" stroke-linecap="round" opacity=".6"/>
+    <path d="M380,0 Q400,250 350,520 Q300,780 380,1050 Q450,1300 410,1536" stroke="#c4934a" stroke-width="80" fill="none" stroke-linecap="round" opacity=".8"/>
+    <path d="M380,0 Q400,250 350,520 Q300,780 380,1050 Q450,1300 410,1536" stroke="#d4a55a" stroke-width="50" fill="none" stroke-linecap="round" opacity=".55"/>
+    <path d="M870,200 Q900,480 870,760 Q840,1040 860,1320 Q870,1430 840,1536" stroke="#c4934a" stroke-width="70" fill="none" stroke-linecap="round" opacity=".7"/>
+    <path d="M870,200 Q900,480 870,760 Q840,1040 860,1320 Q870,1430 840,1536" stroke="#d4a55a" stroke-width="44" fill="none" stroke-linecap="round" opacity=".5"/>
+    <!-- River -->
+    <path d="M1150,0 Q1120,300 1080,580 Q1040,860 1020,1140 Q1000,1350 1040,1536" stroke="#1a6fa0" stroke-width="104" fill="none" stroke-linecap="round" opacity=".9"/>
+    <path d="M1150,0 Q1120,300 1080,580 Q1040,860 1020,1140 Q1000,1350 1040,1536" stroke="#2896cc" stroke-width="75" fill="none" stroke-linecap="round" opacity=".8"/>
+    <path d="M1150,0 Q1120,300 1080,580 Q1040,860 1020,1140 Q1000,1350 1040,1536" stroke="#3fb4e8" stroke-width="46" fill="none" stroke-linecap="round" opacity=".6"/>
+    <path d="M1130,0 Q1102,300 1062,580 Q1022,860 1002,1140 Q982,1350 1022,1536" stroke="rgba(255,255,255,.28)" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <ellipse cx="1055" cy="820" rx="22" ry="14" fill="#2e7d32" opacity=".85"/>
+    <circle cx="1055" cy="820" r="5" fill="#f48fb1" opacity=".8"/>
+    <ellipse cx="1038" cy="960" rx="19" ry="12" fill="#2e7d32" opacity=".85"/>
+    <circle cx="1038" cy="960" r="4" fill="#f48fb1" opacity=".8"/>
+    <!-- Bridge -->
+    <rect x="965" y="550" width="115" height="55" rx="5" fill="#7b4f0e" opacity=".9"/>
+    <rect x="970" y="558" width="105" height="10" rx="3" fill="#9b6a1e"/>
+    <rect x="970" y="574" width="105" height="10" rx="3" fill="#9b6a1e"/>
+    <rect x="970" y="590" width="105" height="9" rx="2" fill="#8b5a14"/>
+    <rect x="965" y="542" width="12" height="22" rx="3" fill="#7b4f0e"/>
+    <rect x="1068" y="542" width="12" height="22" rx="3" fill="#7b4f0e"/>
+    <ellipse cx="650" cy="1100" rx="40" ry="25" fill="#2896cc" opacity=".55"/>
+    <ellipse cx="650" cy="1100" rx="28" ry="17" fill="#3fb4e8" opacity=".45"/>
+    <!-- Flowers -->
+    <circle cx="550" cy="280" r="6" fill="#FF69B4" opacity=".9"/>
+    <circle cx="170" cy="600" r="7" fill="#FFB6C1" opacity=".9"/>
+    <circle cx="760" cy="880" r="6" fill="#FFC0CB" opacity=".8"/>
+    <circle cx="250" cy="1150" r="6" fill="#FF69B4" opacity=".9"/>
+    <circle cx="700" cy="420" r="5" fill="#FFD700" opacity=".8"/>
+  </svg>
+  <div id="treesc"></div>
+  <div id="mystc"></div>
+  <div id="cardc"></div>
+  <div id="player">
+    <img src="Asset/Group/Group90.png" alt="Heo Đất">
+  </div>
+</div></div>
+
+<div id="hud">
+  <button class="bk" onclick="goBack()">←</button>
+  <div class="hbar">
+    <div class="hres"><span class="ic">⚡</span><span class="vl" id="hudnrg">10/200</span><button class="pl" style="background:#1565C0">+</button></div>
+    <div class="hres"><span class="ic">🐷</span><span class="vl" id="hudgld">100</span><button class="pl" style="background:#E65100">+</button></div>
+    <div class="hres"><span class="ic">🪙</span><span class="vl" id="hudslv">432</span><button class="pl" style="background:#455A64">+</button></div>
+  </div>
+  <div id="pbar"><div class="pav"><img src="Asset/Group/Group90.png" alt=""></div><div><div class="pnm">NGUYỄN HOÀNH TIẾN</div><div class="pexp"><div class="plv">12</div><div class="pew"><div class="pef"></div></div><div class="pet">760/1230</div></div></div><button style="width:34px;height:34px;background:rgba(255,255,255,.25);border:none;border-radius:50%;font-size:16px;cursor:pointer;">⚙️</button></div>
+  <div id="zind"><img class="zind-icon" src="Asset/Component/MapIcon.png" alt=""><div class="zind-right"><div class="ztl">KHU VỰC 1: PHÍA NAM</div><div class="zbw"><div class="zbf" id="zbar" style="width:55%"></div><div class="zbt" id="zbtxt">55%</div></div></div></div>
+</div>
+
+<div id="jc"><div id="jb"><div id="jk"></div></div></div>
+
+<div id="bnav">
+  <button class="ni" onclick="toast('🚧 Cửa hàng!')"><span class="nico"><img src="Asset/Icon/CuaHang01_export.png" alt=""></span><span class="nlb">CỬA HÀNG</span></button>
+  <button class="ni" onclick="toast('🚧 Kho đồ!')"><span class="nico"><img src="Asset/Icon/TuiDo01_export.png" alt=""></span><span class="nlb">KHO ĐỒ</span></button>
+  <button class="ni" onclick="showQuests()"><span class="nico"><img src="Asset/Icon/NhiemVu05_export.png" alt=""></span><span class="nlb">NHIỆM VỤ</span></button>
+  <button class="ni" onclick="toast('🚧 Mini-game!')"><span class="nico"><img src="Asset/Component/IconsMiniGame03.png" alt=""></span><span class="nlb">MINI-GAME</span></button>
+  <button class="ni" onclick="showColl()"><span class="nico"><img src="Asset/Icon/BoSuuTap01_export.png" alt=""></span><span class="nlb">BỘ SƯU TẬP</span></button>
+</div>
+
+<!-- MINI-GAME -->
+<div id="mgs">
+  <div id="mgt"><button id="mgexit" onclick="showExitPopup()">←</button>
+    <div class="mgtbl"><span class="lic">⏱️</span><div><div class="lval" id="mgtimer">00:30</div><div class="lnm">THỜI GIAN</div></div></div>
+    <div class="mgtbl"><span class="lic">⭐</span><div><div class="lval" id="mgscore">0</div><div class="lnm">ĐIỂM</div></div></div>
+    <div class="obj-box"><div class="obj-lbl">MỤC TIÊU</div><div class="obj-val"><span id="mgdone">0</span>/<span id="mgtotal">1</span></div></div>
+  </div>
+  <div id="cdov"><div id="cdnum">3</div></div>
+  <div id="mgan">
+    <div id="reqwrap"><div id="reqicon">?</div><div id="reqarrow"></div></div>
+    <div id="andisp">🦌</div>
+    <div id="annm">Nai</div>
+    <div class="combobadge" id="combobadge" style="display:none">COMBO x<span id="combonum">0</span></div>
+    <div id="scpopwrap"></div>
+  </div>
+  <div id="mgpu">
+    <button class="pub" id="puhint" onclick="usePU('hint')"><span class="puic">💡</span><span class="pulb">GỢI Ý</span><span class="pucnt" id="puhintcnt">1x</span></button>
+    <button class="pub" id="putime" onclick="usePU('time')"><span class="puic">⏱️</span><span class="pulb">THÊM GIỜ</span><span class="pucnt" id="putimecnt">1x</span></button>
+    <button class="pub" id="pufocus" onclick="usePU('focus')"><span class="puic">🎯</span><span class="pulb">TẬP TRUNG</span><span class="pucnt" id="pufocuscnt">✓</span></button>
+  </div>
+  <div id="fttray"><div id="ftgrid"></div></div>
+</div>
+
+<!-- COLLECTION SCREEN (image 1 style) -->
+<div id="cols" class="wooden-bg">
+  <div id="col-frame">
+    <div id="col-titlebar">
+      <button id="colcl2" onclick="hideColl()">✕</button>
+      <h2>📚 Bộ Sưu Tập</h2>
+      <div id="col-subtitle"><span>🧩</span><span id="colcnt">0 / 3 bộ hoàn thành</span></div>
+    </div>
+    <div id="col-scroll">
+      <div class="sp-grid" id="sp-grid"></div>
+    </div>
+    <div id="col-tabs">
+      <button class="col-tab active">🐾 Sinh Vật</button>
+      <button class="col-tab" onclick="toast('Voucher - sắp ra mắt!')">🎟️ Voucher</button>
+    </div>
+  </div>
+  <!-- Species Detail Popup (inside collection screen) -->
+  <div id="sp-detail">
+    <div id="sp-detail-card">
+      <div id="sp-det-top">
+        <div id="sp-det-img"><span id="sp-det-em">🦌</span></div>
+        <div id="sp-det-info">
+          <div id="sp-det-name">Nai</div>
+          <div id="sp-det-rarity">Nguy Cấp</div>
+        </div>
+        <button id="sp-det-close" onclick="closeSpDetail()">✕</button>
+      </div>
+      <div id="sp-milestones">
+        <div class="ms-title">Thu thập mảnh để nhận thưởng</div>
+        <div class="ms-row">
+          <div class="ms-icon-wrap"><span class="ms-icon">🪙</span><div class="ms-check" id="ms0">2</div></div>
+          <div class="ms-line" id="msline0"></div>
+          <div class="ms-icon-wrap"><span class="ms-icon">⚡</span><div class="ms-check" id="ms1">4</div></div>
+          <div class="ms-line" id="msline1"></div>
+          <div class="ms-icon-wrap"><span class="ms-icon">🐷</span><div class="ms-check" id="ms2">6</div></div>
+        </div>
+        <div class="ms-progress-bar"><div class="ms-progress-fill" id="ms-fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;">
+          <span style="color:rgba(200,160,80,.6);font-size:9px;">1000 Bạc</span>
+          <span style="color:rgba(200,160,80,.6);font-size:9px;">200 N.lượng</span>
+          <span style="color:rgba(200,160,80,.6);font-size:9px;">5 Heo Vàng</span>
+        </div>
+      </div>
+      <div id="sp-types">
+        <div class="sp-type-grid" id="sp-type-grid"></div>
+      </div>
+      <div id="sp-content-box">
+        <div id="sp-content-inner">
+          <div id="sp-content-title">← Chọn mảnh để xem thông tin</div>
+          <div id="sp-content-text" style="color:rgba(200,160,80,.5);font-size:11px;font-style:italic;">Nhấn vào mảnh thẻ bên trên để xem nội dung tương ứng.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MISSION SCREEN (image 3 style) -->
+<div id="quests">
+  <div id="quest-header">
+    <div id="quest-title-plank"><h2>Nhiệm Vụ Hằng Ngày</h2></div>
+    <div id="quest-timer-row"><span>🧭 Làm mới sau:</span><span id="quest-timer">16:47:25</span></div>
+  </div>
+  <div id="quest-progress-section">
+    <div class="qp-header">
+      <div class="qp-circle" id="qp-num">0/8</div>
+      <div style="flex:1;margin-left:8px;">
+        <div class="qp-title">Tiến trình nhiệm vụ</div>
+        <div class="qp-track">
+          <div class="qp-bar"><div class="qp-fill" id="qp-fill" style="width:0%"></div></div>
+          <div class="qp-milestones" id="qp-ms"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="quest-list"></div>
+  <div id="quest-tabs">
+    <button class="qtab active" onclick="switchQTab('daily',this)"><span class="qtab-icon">📅</span>Hằng ngày</button>
+    <button class="qtab" onclick="switchQTab('story',this)"><span class="qtab-icon">📖</span>Cốt truyện</button>
+    <button class="qtab" onclick="switchQTab('achieve',this)"><span class="qtab-icon">🏆</span>Thành tựu</button>
+    <button class="qtab back-tab" onclick="hideQuests()" style="border-left:2px solid rgba(180,140,60,.3);"><span class="qtab-icon">←</span>Quay lại</button>
+  </div>
+</div>
+
+<!-- EXIT -->
+<div class="pov" id="expop"><div class="pbx"><div class="ptl">THÔNG BÁO<button class="pxbtn" onclick="hideExit()">✕</button></div><div class="pbody"><p class="pmtxt">Bạn chắc chắn muốn<br>thoát khỏi trò chơi</p><p class="pntxt">*Bạn sẽ không nhận được<br>phần thưởng của phần chơi này</p><div class="pbtns"><button class="btn-exit" onclick="doExit()">THOÁT</button><button class="btn-stay" onclick="hideExit()">Ở LẠI</button></div></div></div></div>
+<!-- VICTORY -->
+<div class="pov" id="vicpop"><div class="pbx"><div class="vhd"><div class="vtl">🎉 CHIẾN THẮNG</div></div><span class="vpig"><img src="Asset/Group/Group90.png" alt="" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,215,0,.8));"></span><div class="vsc">— Điểm: <span id="vicscore">0</span> —</div><div class="vrw"><div class="vrwlb">PHẦN THƯỞNG NHẬN ĐƯỢC</div><div class="vrwlist" id="vrwlist"></div></div><div class="vbtns"><button class="btn-ctr" onclick="closeResult()">TRUNG TÂM</button><button class="btn-map" onclick="closeResult()">BẢN ĐỒ</button><button class="btn-rep" onclick="replayLvl()">CHƠI LẠI</button></div></div></div>
+<!-- DEFEAT -->
+<div class="pov" id="defpop"><div class="pbx" style="border-color:#4B9FFF;"><div class="dhd"><div class="dtl">💙 THẤT BẠI</div></div><span class="dpig"><img src="Asset/Group/Group90.png" alt="" style="width:72px;height:72px;object-fit:contain;filter:grayscale(.4) drop-shadow(0 2px 8px rgba(0,0,0,.4));transform:rotate(-12deg);"></span><p class="dtxt">Bạn Hãy cố gắng ở lần sau nhé<br>Heo đất tin bạn làm được</p><div class="dnrw"><div class="nrit"><span class="nric">🎁</span><span>Không nhận<br>phần thưởng</span></div><div class="nrit"><span class="nric">⚡</span><span>Năng lượng<br>được hoàn trả</span></div></div><div class="vbtns"><button class="btn-ctr" onclick="closeResult()">TRUNG TÂM</button><button class="btn-map" onclick="closeResult()">BẢN ĐỒ</button><button class="btn-rep" onclick="replayLvl()">CHƠI LẠI</button></div></div></div>
+
+<div id="tutov"><div class="tutcard"><span class="tutem" id="tutem">🗺️</span><p class="tuttxt" id="tuttxt">Dùng joystick để di chuyển heo. Thu thập thẻ sinh vật rơi rải rác trên bản đồ!</p><div class="tutdots"><div class="tdot on" id="td0"></div><div class="tdot" id="td1"></div><div class="tdot" id="td2"></div></div><button class="tutnxt" onclick="nextTut()">TIẾP THEO →</button></div></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const ANIMALS=[
+  {id:'animal_1',name:'Voi châu Á',em:'🐘',food:'food_1'},
+  {id:'animal_2',name:'Bò tót',em:'🐃',food:'food_2'},
+  {id:'animal_3',name:'Nai',em:'🦌',food:'food_3'},
+  {id:'animal_4',name:'Gấu chó',em:'🐻',food:'food_4'},
+  {id:'animal_5',name:'Lợn rừng',em:'🐗',food:'food_5'},
+  {id:'animal_6',name:'Cá sấu Xiêm',em:'🐊',food:'food_6'},
+  {id:'animal_7',name:'Vượn đen má vàng',em:'🦍',food:'food_7'},
+  {id:'animal_8',name:'Chà vá chân đen',em:'🐒',food:'food_8'},
+  {id:'animal_9',name:'Khỉ đuôi dài',em:'🐵',food:'food_9'},
+  {id:'animal_10',name:'Nhím',em:'🦔',food:'food_10'},
+];
+const FOODS=[
+  {id:'food_1',name:'Mía',em:'🎋'},{id:'food_2',name:'Lúa',em:'🌾'},
+  {id:'food_3',name:'Bắp',em:'🌽'},{id:'food_4',name:'Mật ong',em:'🍯'},
+  {id:'food_5',name:'Khoai lang',em:'🍠'},{id:'food_6',name:'Cá',em:'🐟'},
+  {id:'food_7',name:'Sung',em:'🫐'},{id:'food_8',name:'Lá non',em:'🍃'},
+  {id:'food_9',name:'Cua',em:'🦀'},{id:'food_10',name:'Măng',em:'🎍'},
+];
+const SPECIES={
+  nai:{name:'Nai',em:'🦌',rarity:'threatened',rarityLabel:'Nguy Cấp'},
+  men:{name:'Mến',em:'🦌',rarity:'rare',rarityLabel:'Hiếm'},
+  muong:{name:'Muống Hoa Đào',em:'🌸',rarity:'threatened',rarityLabel:'Nguy Cấp'},
+};
+const TYPE_LABEL={foot:'Dấu Vết',environment:'Nơi Sống',food:'Thức Ăn',image:'Điểm Nhận Dạng',conservation:'Bảo Tồn',special:'Bạn Có Biết?'};
+const TYPE_EM={foot:'👣',environment:'🌿',food:'🍃',image:'🔍',conservation:'🛡️',special:'⭐'};
+const CARD_CONTENT={
+  animal_threatened_1_foot:'Dấu guốc chẻ đôi trên bùn, kẽm vết cỏ bị nằm ép.',
+  animal_threatened_1_environment:'Sống ở bìa rừng, trảng cỏ ẩm và gần nguồn nước.',
+  animal_threatened_1_food:'Ăn cỏ non, lá, chồi cây và quả rừng rụng.',
+  animal_threatened_1_image:'Thân nâu lớn; con đực có gạc đài nhiều nhánh.',
+  animal_threatened_1_conservation:'Cần bảo vệ trảng cỏ và ngăn săn bắt trái phép.',
+  animal_threatened_1_special:'Nai rừng thường ra trảng cỏ kiếm ăn lúc sáng sớm hoặc chiều muộn.',
+  animal_rare_1_foot:'Dấu guốc nhỏ, lối đi thấp xuyên qua bụi rậm.',
+  animal_rare_1_environment:'Sống ở bụi rậm, bìa rừng và tầng thấp nhiều lá mục.',
+  animal_rare_1_food:'Ăn lá non, chồi mềm, cỏ và quả rừng rụng.',
+  animal_rare_1_image:'Lông nâu đỏ, dáng nhỏ; con đực có gạc rất ngắn.',
+  animal_rare_1_conservation:'Dễ mắc bẫy dây, cần giữ rừng thấp ít bị xáo trộn.',
+  animal_rare_1_special:'Mến nhỏ hơn nai, nhanh nhẹn và rất nhút nhát.',
+  plant_threatened_1_foot:'Dễ nhận ra hoa hồng rụng và quả đậu dài quanh gốc.',
+  plant_threatened_1_environment:'Mọc ở bờ sông, bìa rừng và nơi có nhiều ánh sáng.',
+  plant_threatened_1_food:'Hạt trong quả đậu là thức ăn của chim và sóc.',
+  plant_threatened_1_image:'Cây gỗ vừa, lá kép nhỏ, hoa hồng mọc thành chùm.',
+  plant_threatened_1_conservation:'Là điểm nhấn mùa hoa, cần tránh bẻ cành và hái hoa.',
+  plant_threatened_1_special:'Hoa hồng rực rỡ ven sông vào mùa đầu hạ.',
+};
+const ALL_CARDS=[
+  {id:'animal_threatened_1_foot',sid:'nai',type:'foot',px:468,py:1000},
+  {id:'animal_threatened_1_environment',sid:'nai',type:'environment',px:190,py:220},
+  {id:'animal_threatened_1_food',sid:'nai',type:'food',px:1090,py:469},
+  {id:'animal_threatened_1_image',sid:'nai',type:'image',px:1085,py:1250},
+  {id:'animal_threatened_1_conservation',sid:'nai',type:'conservation',px:110,py:880},
+  {id:'animal_threatened_1_special',sid:'nai',type:'special',rewardOnly:true},
+  {id:'animal_rare_1_foot',sid:'men',type:'foot',px:316,py:793},
+  {id:'animal_rare_1_environment',sid:'men',type:'environment',px:130,py:1360},
+  {id:'animal_rare_1_food',sid:'men',type:'food',px:130,py:1390},
+  {id:'animal_rare_1_image',sid:'men',type:'image',px:420,py:654},
+  {id:'animal_rare_1_conservation',sid:'men',type:'conservation',px:220,py:668},
+  {id:'animal_rare_1_special',sid:'men',type:'special',rewardOnly:true},
+  {id:'plant_threatened_1_foot',sid:'muong',type:'foot',px:130,py:1370},
+  {id:'plant_threatened_1_environment',sid:'muong',type:'environment',px:839,py:869},
+  {id:'plant_threatened_1_food',sid:'muong',type:'food',px:663,py:720},
+  {id:'plant_threatened_1_image',sid:'muong',type:'image',px:1440,py:850},
+  {id:'plant_threatened_1_conservation',sid:'muong',type:'conservation',px:1019,py:339},
+  {id:'plant_threatened_1_special',sid:'muong',type:'special',rewardOnly:true},
+];
+const MAP_CARDS=ALL_CARDS.filter(c=>!c.rewardOnly);
+const LEVELS=[
+  {id:'animal_feeding_1',tl:30,pool:['animal_1'],cnt:1,pen:3,cs:100,bs:0,px:872,py:382,rslv:50,rexp:0,rcard:null},
+  {id:'animal_feeding_2',tl:30,pool:['animal_1','animal_2','animal_3','animal_4'],cnt:3,pen:3,cs:100,bs:30,px:779,py:1360,rslv:100,rexp:100,rcard:'animal_threatened_1_special'},
+  {id:'animal_feeding_3',tl:30,pool:['animal_1','animal_2','animal_3','animal_4','animal_5'],cnt:3,pen:3,cs:100,bs:30,px:375,py:1260,rslv:200,rexp:200,rcard:null},
+  {id:'animal_feeding_4',tl:30,pool:['animal_3','animal_4','animal_5','animal_6','animal_7'],cnt:4,pen:3,cs:100,bs:30,px:894,py:574,rslv:300,rexp:300,rcard:'animal_rare_1_special'},
+  {id:'animal_feeding_5',tl:30,pool:['animal_1','animal_2','animal_5','animal_6','animal_7','animal_8'],cnt:4,pen:3,cs:100,bs:30,px:370,py:1380,rslv:400,rexp:400,rcard:null},
+  {id:'animal_feeding_6',tl:30,pool:['animal_1','animal_2','animal_6','animal_7','animal_8','animal_9'],cnt:5,pen:3,cs:100,bs:30,px:155,py:564,rslv:500,rexp:500,rcard:'plant_threatened_1_special'},
+  {id:'animal_feeding_7',tl:30,pool:['animal_1','animal_2','animal_3','animal_4','animal_8','animal_9','animal_10'],cnt:5,pen:3,cs:100,bs:30,px:973,py:1370,rslv:600,rexp:600,rcard:null},
+];
+// Trees x3 size, stored with collision radius
+const TREES=[
+  {x:120,y:260,e:'🌲',s:108,cr:40},{x:310,y:220,e:'🌳',s:126,cr:44},{x:185,y:400,e:'🌲',s:102,cr:38},
+  {x:510,y:210,e:'🌴',s:120,cr:40},{x:730,y:210,e:'🌲',s:114,cr:38},{x:1010,y:210,e:'🌳',s:132,cr:44},
+  {x:80,y:630,e:'🌲',s:108,cr:38},{x:210,y:910,e:'🌳',s:120,cr:40},{x:105,y:1120,e:'🌲',s:114,cr:38},
+  {x:255,y:1290,e:'🌴',s:126,cr:40},{x:610,y:720,e:'🌲',s:108,cr:36},{x:720,y:1280,e:'🌳',s:114,cr:38},
+  {x:1110,y:840,e:'🌲',s:102,cr:36},{x:1310,y:620,e:'🌳',s:126,cr:42},{x:415,y:295,e:'🌲',s:108,cr:36},
+  {x:920,y:315,e:'🌲',s:120,cr:40},{x:1115,y:1200,e:'🌴',s:132,cr:44},{x:310,y:1400,e:'🌳',s:114,cr:38},
+  {x:1410,y:1370,e:'🌲',s:108,cr:36},{x:820,y:1290,e:'🌳',s:120,cr:40},{x:1380,y:300,e:'🌲',s:114,cr:38},
+  {x:555,y:1120,e:'🌲',s:102,cr:36},{x:1260,y:1060,e:'🌳',s:126,cr:40},{x:700,y:435,e:'🌲',s:108,cr:36},
+  {x:480,y:880,e:'🌲',s:102,cr:36},{x:1180,y:450,e:'🌳',s:114,cr:38},{x:1400,y:620,e:'🌲',s:108,cr:36},
+  {x:960,y:1210,e:'🌳',s:120,cr:38},{x:200,y:620,e:'🌲',s:102,cr:36},
+];
+// Animal image mapping (where individual assets exist)
+const ANIMAL_IMGS={
+  'animal_1':'Asset/Group/Group89.png',  // Voi châu Á
+  'animal_3':'Asset/Group/Group88.png',  // Nai
+};
+const DAILY_MISSIONS=[
+  {id:'dm1',desc:'Đăng nhập vào game',target:1,r1:'heo_vang',r1q:1,r2:null,r2q:0},
+  {id:'dm2',desc:'Sử dụng {0} năng lượng',target:1000,r1:'xp',r1q:200,r2:'heo_vang',r2q:2},
+  {id:'dm3',desc:'Tham gia mini-games {0} lần',target:2,r1:'xp',r1q:200,r2:'silver',r2q:200},
+  {id:'dm4',desc:'Sử dụng {0} đồ ăn',target:2,r1:'xp',r1q:200,r2:'silver',r2q:200},
+  {id:'dm5',desc:'Mở {0} Rương',target:1,r1:'xp',r1q:200,r2:'silver',r2q:200},
+  {id:'dm6',desc:'Nhận {0} Bạc',target:1000,r1:'xp',r1q:200,r2:'stamina',r2q:100},
+  {id:'dm7',desc:'Nhận {0} Heo Vàng',target:5,r1:'xp',r1q:200,r2:'stamina',r2q:100},
+  {id:'dm8',desc:'Sử dụng {0} Bạc',target:2000,r1:'xp',r1q:200,r2:'stamina',r2q:100},
+  {id:'dm9',desc:'Sử dụng {0} Heo Vàng',target:20,r1:'xp',r1q:200,r2:'stamina',r2q:100},
+  {id:'dm10',desc:'Quyên góp {0}đ',target:5000,r1:'xp',r1q:200,r2:'stamina',r2q:100},
+];
+const TOTAL_MILESTONES=[{t:2,r:'🐷',rq:1},{t:4,r:'👟',rq:'50BC'},{t:6,r:'🪙',rq:'100Bạc'},{t:8,r:'🎁',rq:4}];
+// ============================================================
+// STATE
+// ============================================================
+const S={energy:10,gold:100,silver:432,exp:760,lvl:12,cards:new Set(),done:new Set()};
+const P={x:580,y:430,spd:1.5};
+const JOY={active:false,bx:0,by:0,dx:0,dy:0};
+const MG={lvl:null,t:0,score:0,total:0,combo:0,fed:0,cur:null,last:null,timer:null,hintU:false,timeU:false,focusCD:false,focusOn:false,running:false};
+const LVL_IN=new Array(LEVELS.length).fill(false);
+const MissP={dm1:1,dm2:0,dm3:0,dm4:0,dm5:0,dm6:0,dm7:0,dm8:0,dm9:0,dm10:0,claimed:new Set()};
+const CAM_CX=195,CAM_CY=455;
+const P_YMIN=175,P_YMAX=1410,P_XMIN=50,P_XMAX=1486;
+let questTimer=60465; // 16:47:25
+
+// River data for collision
+const RIVER_PTS=[[0,1150],[300,1120],[580,1080],[860,1040],[1140,1020],[1350,1000],[1536,1040]];
+function getRiverX(y){
+  for(let i=0;i<RIVER_PTS.length-1;i++){
+    if(y>=RIVER_PTS[i][0]&&y<=RIVER_PTS[i+1][0]){
+      const t=(y-RIVER_PTS[i][0])/(RIVER_PTS[i+1][0]-RIVER_PTS[i][0]);
+      return RIVER_PTS[i][1]+t*(RIVER_PTS[i+1][1]-RIVER_PTS[i][1]);
+    }
+  }
+  return 1040;
+}
+function isInRiver(x,y){
+  if(y>=520&&y<=650&&x>=930&&x<=1120)return false; // bridge
+  const cx=getRiverX(y);
+  return Math.abs(x-cx)<54;
+}
+function isBlocked(x,y){
+  for(const t of TREES){
+    const dx=x-t.x,dy=y-t.y;
+    if(dx*dx+dy*dy<t.cr*t.cr)return true;
+  }
+  if(isInRiver(x,y))return true;
+  // Small pond
+  const pdx=x-650,pdy=y-1100;
+  if(pdx*pdx+pdy*pdy<38*38)return true;
+  return false;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load',()=>{
+  buildMap();buildFoodGrid();setupJoystick();setupKeys();
+  updatePlayer();centerCam();loop();
+  setInterval(()=>{if(document.getElementById('quests').classList.contains('on')){questTimer=Math.max(0,questTimer-1);const el=document.getElementById('quest-timer');if(el){const h=Math.floor(questTimer/3600),m=Math.floor(questTimer%3600/60),s=questTimer%60;el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}}} ,1000);
+});
+
+function buildMap(){
+  const tc=document.getElementById('treesc');
+  TREES.forEach(t=>{
+    const e=document.createElement('div');e.className='tree';
+    e.textContent=t.e;e.style.cssText=`left:${t.x}px;top:${t.y}px;font-size:${t.s}px;`;
+    tc.appendChild(e);
+  });
+  const mc=document.getElementById('mystc');
+  LEVELS.forEach((lv,i)=>{
+    const ring=document.createElement('div');ring.className='myst-ring';
+    ring.style.cssText=`left:${lv.px}px;top:${lv.py}px;`;mc.appendChild(ring);
+    const el=document.createElement('div');el.className='myst';el.id='myst'+i;
+    el.style.cssText=`left:${lv.px}px;top:${lv.py}px;animation-delay:${(i*.28)%1.4}s;`;
+    el.innerHTML=`<span style="font-size:26px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))">⭐</span><div class="myst-lbl">Cấp ${i+1}</div>`;
+    el.onclick=()=>tryStartMG(i);mc.appendChild(el);
+  });
+  const cc=document.getElementById('cardc');
+  MAP_CARDS.forEach((cd,i)=>{
+    const sp=SPECIES[cd.sid];
+    const el=document.createElement('div');
+    el.className=`mcard ${sp.rarity}`;el.id='mc_'+cd.id;
+    el.style.cssText=`left:${cd.px}px;top:${cd.py}px;animation-delay:${(i*.25)%2}s;`;
+    const cardImg={'nai':'Asset/Group/Group88.png','men':'Asset/Group/Group88.png'}[cd.sid];
+    el.innerHTML=cardImg?`<img src="${cardImg}" alt="" style="width:36px;height:36px;object-fit:contain;${cd.sid==='men'?'transform:scaleX(-1);':''}"><span class="mcard-type">${TYPE_EM[cd.type]}</span>`:`<span>${sp.em}</span><span class="mcard-type">${TYPE_EM[cd.type]}</span>`;
+    el.dataset.cid=cd.id;cc.appendChild(el);
+  });
+}
+
+function buildFoodGrid(){
+  const g=document.getElementById('ftgrid');g.innerHTML='';
+  FOODS.forEach(f=>{
+    const el=document.createElement('div');el.className='fi';el.id='fi_'+f.id;
+    el.innerHTML=`<span class="fiem">${f.em}</span><span class="finm">${f.name}</span>`;
+    el.addEventListener('click',()=>tapFood(f.id));
+    el.addEventListener('touchend',e=>{e.preventDefault();tapFood(f.id);});
+    g.appendChild(el);
+  });
+}
+
+// ============================================================
+// MOVEMENT + COLLISION
+// ============================================================
+function setupKeys(){
+  const K={};
+  window.addEventListener('keydown',e=>K[e.key]=true);
+  window.addEventListener('keyup',e=>K[e.key]=false);
+  setInterval(()=>{
+    if(document.getElementById('mgs').classList.contains('on'))return;
+    if(document.getElementById('cols').classList.contains('on'))return;
+    if(document.getElementById('quests').classList.contains('on'))return;
+    let dx=0,dy=0;
+    if(K['ArrowLeft']||K['a']||K['A'])dx=-1;if(K['ArrowRight']||K['d']||K['D'])dx=1;
+    if(K['ArrowUp']||K['w']||K['W'])dy=-1;if(K['ArrowDown']||K['s']||K['S'])dy=1;
+    if(dx||dy){JOY.dx=dx;JOY.dy=dy;}else if(!JOY.active){JOY.dx=0;JOY.dy=0;}
+  },16);
+}
+
+function setupJoystick(){
+  const base=document.getElementById('jb'),knob=document.getElementById('jk'),R=42;
+  function gp(e){const t=e.touches?e.touches[0]:e;return{x:t.clientX,y:t.clientY};}
+  function start(e){
+    if(document.getElementById('mgs').classList.contains('on'))return;
+    e.preventDefault();const r=base.getBoundingClientRect();
+    JOY.bx=r.left+r.width/2;JOY.by=r.top+r.height/2;JOY.active=true;mv(e);
+  }
+  function mv(e){
+    if(!JOY.active)return;e.preventDefault();
+    const p=gp(e);let dx=p.x-JOY.bx,dy=p.y-JOY.by;
+    const d=Math.sqrt(dx*dx+dy*dy);if(d>R){dx=dx/d*R;dy=dy/d*R;}
+    knob.style.left=(50+dx/120*100)+'%';knob.style.top=(50+dy/120*100)+'%';
+    knob.style.transform='translate(-50%,-50%)';JOY.dx=dx/R;JOY.dy=dy/R;
+  }
+  function end(){JOY.active=false;JOY.dx=0;JOY.dy=0;knob.style.left='50%';knob.style.top='50%';knob.style.transform='translate(-50%,-50%)';}
+  base.addEventListener('touchstart',start,{passive:false});base.addEventListener('touchmove',mv,{passive:false});
+  base.addEventListener('touchend',end);base.addEventListener('touchcancel',end);
+  base.addEventListener('mousedown',start);window.addEventListener('mousemove',mv);window.addEventListener('mouseup',end);
+}
+
+function loop(){
+  if(JOY.dx||JOY.dy){
+    let nx=Math.max(P_XMIN,Math.min(P_XMAX,P.x+JOY.dx*P.spd));
+    let ny=Math.max(P_YMIN,Math.min(P_YMAX,P.y+JOY.dy*P.spd));
+    if(!isBlocked(nx,ny)){P.x=nx;P.y=ny;}
+    else if(!isBlocked(nx,P.y)){P.x=nx;}
+    else if(!isBlocked(P.x,ny)){P.y=ny;}
+    const pl=document.getElementById('player');
+    if(JOY.dx<0)pl.style.transform='scaleX(-1)';else if(JOY.dx>0)pl.style.transform='scaleX(1)';
+    updatePlayer();centerCam();checkHits();
+  }
+  requestAnimationFrame(loop);
+}
+function updatePlayer(){const pl=document.getElementById('player');pl.style.left=(P.x-50)+'px';pl.style.top=(P.y-50)+'px';}
+function centerCam(){
+  const tx=Math.min(0,Math.max(390-1536,CAM_CX-P.x));
+  const ty=Math.min(0,Math.max(844-1536,CAM_CY-P.y));
+  document.getElementById('mw').style.transform=`translate(${tx}px,${ty}px)`;
+}
+
+function checkHits(){
+  if(document.getElementById('mgs').classList.contains('on'))return;
+  LEVELS.forEach((lv,i)=>{
+    const dx=P.x-lv.px,dy=P.y-lv.py;
+    const inR=Math.sqrt(dx*dx+dy*dy)<82;
+    if(inR&&!LVL_IN[i]){LVL_IN[i]=true;tryStartMG(i);}else if(!inR)LVL_IN[i]=false;
+  });
+  MAP_CARDS.forEach(cd=>{
+    const el=document.getElementById('mc_'+cd.id);if(!el||el.style.display==='none')return;
+    const dx=P.x-cd.px,dy=P.y-cd.py;
+    if(Math.sqrt(dx*dx+dy*dy)<68)collectCard(cd);
+  });
+}
+
+function collectCard(cd){
+  if(S.cards.has(cd.id))return;S.cards.add(cd.id);
+  const el=document.getElementById('mc_'+cd.id);
+  if(el){el.style.transition='all .3s';el.style.transform='translate(-50%,-50%) scale(0)';el.style.opacity='0';setTimeout(()=>el.style.display='none',300);}
+  MissP.dm4=Math.min(2,MissP.dm4+1);
+  toast(`✨ Thu thập: ${SPECIES[cd.sid].name} - ${TYPE_LABEL[cd.type]}!`);
+  updateProgress();
+}
+
+function updateProgress(){
+  const p=Math.min(100,55+Math.floor(S.cards.size/18*35)+S.done.size*2);
+  document.getElementById('zbar').style.width=p+'%';document.getElementById('zbtxt').textContent=p+'%';
+}
+
+// ============================================================
+// MINI-GAME
+// ============================================================
+function tryStartMG(idx){
+  if(document.getElementById('mgs').classList.contains('on'))return;
+  if(S.done.has(LEVELS[idx].id)){toast('✅ Đã hoàn thành!');return;}
+  if(S.energy<=0){toast('⚡ Hết năng lượng!');return;}
+  startMG(idx);
+}
+function startMG(idx){
+  const lv=LEVELS[idx];S.energy--;document.getElementById('hudnrg').textContent=S.energy+'/200';
+  MG.lvl=lv;MG.t=lv.tl;MG.score=0;MG.total=lv.cnt;MG.combo=0;MG.fed=0;MG.last=null;
+  MG.hintU=false;MG.timeU=false;MG.focusCD=false;MG.focusOn=false;MG.running=false;MG.cur=null;
+  document.getElementById('mgscore').textContent='0';
+  document.getElementById('mgtimer').textContent='00:'+String(lv.tl).padStart(2,'0');
+  document.getElementById('mgdone').textContent='0';document.getElementById('mgtotal').textContent=lv.cnt;
+  document.getElementById('combobadge').style.display='none';
+  resetPUs();clearFoodHi();
+  document.getElementById('mgan').style.visibility='hidden';
+  document.getElementById('mgs').classList.add('on');
+  MissP.dm3=Math.min(2,MissP.dm3+1);
+  startCountdown(()=>{document.getElementById('mgan').style.visibility='visible';nextWave();startTimer();});
+}
+function startCountdown(cb){
+  const ov=document.getElementById('cdov'),num=document.getElementById('cdnum');
+  ov.classList.add('on');let n=3;num.textContent=n;num.style.fontSize='100px';
+  const iv=setInterval(()=>{n--;if(n>0){num.textContent=n;num.style.animation='none';requestAnimationFrame(()=>num.style.animation='cdbounce .6s ease-out');}else{clearInterval(iv);num.textContent='BẮT ĐẦU!';num.style.fontSize='36px';setTimeout(()=>{ov.classList.remove('on');num.style.fontSize='100px';cb();},700);}},900);
+}
+function nextWave(){
+  if(MG.fed>=MG.total){winGame();return;}
+  const pool=MG.lvl.pool;let cands=pool.filter(a=>a!==MG.last);if(!cands.length)cands=pool;
+  const aid=cands[Math.floor(Math.random()*cands.length)];MG.last=aid;
+  const an=ANIMALS.find(a=>a.id===aid);MG.cur=an;
+  const imgSrc=ANIMAL_IMGS[an.id];const ad=document.getElementById('andisp');
+  if(imgSrc){ad.innerHTML=`<img src="${imgSrc}" alt="${an.name}">`;}else{ad.innerHTML=`<span class="an-emoji">${an.em}</span>`;}
+  document.getElementById('annm').textContent=an.name;
+  const ri=document.getElementById('reqicon');ri.textContent=MG.focusOn?FOODS.find(f=>f.id===an.food).em:'?';ri.className='';
+  clearFoodHi();
+  if(!MG.hintU)document.getElementById('puhint').classList.remove('dis');
+  if(!MG.timeU)document.getElementById('putime').classList.remove('dis');
+  ad.style.animation='none';requestAnimationFrame(()=>ad.style.animation='anbounce 1.2s ease-in-out infinite');
+}
+function startTimer(){
+  MG.running=true;if(MG.timer)clearInterval(MG.timer);
+  MG.timer=setInterval(()=>{MG.t--;document.getElementById('mgtimer').textContent='00:'+String(Math.max(0,MG.t)).padStart(2,'0');if(MG.t<=0){clearInterval(MG.timer);MG.running=false;loseGame();}},1000);
+}
+function tapFood(fid){
+  if(!MG.cur||!MG.running)return;
+  const ok=MG.cur.food===fid;const ri=document.getElementById('reqicon');
+  const cF=FOODS.find(f=>f.id===MG.cur.food);ri.textContent=cF.em;
+  if(ok){
+    ri.className='ok';document.getElementById('fi_'+fid).classList.add('hi');
+    const pts=MG.lvl.cs+MG.lvl.bs*MG.combo;MG.score+=pts;MG.combo++;MG.fed++;
+    document.getElementById('mgscore').textContent=MG.score;document.getElementById('mgdone').textContent=MG.fed;
+    const cb=document.getElementById('combobadge');
+    if(MG.combo>1){cb.style.display='block';document.getElementById('combonum').textContent=MG.combo;}else cb.style.display='none';
+    showScPop('+'+pts+(MG.combo>1?' COMBO x'+MG.combo+'!':''),'#FFD740');
+    setTimeout(()=>{if(MG.fed>=MG.total)winGame();else nextWave();},600);
+  } else {
+    ri.className='ng';document.getElementById('fi_'+fid).classList.add('wr');
+    MG.combo=0;document.getElementById('combobadge').style.display='none';
+    MG.t=Math.max(0,MG.t-MG.lvl.pen);document.getElementById('mgtimer').textContent='00:'+String(MG.t).padStart(2,'0');
+    showScPop('-'+MG.lvl.pen+'s','#FF5252');
+    if(MG.t<=0){clearInterval(MG.timer);MG.running=false;setTimeout(()=>loseGame(),400);}
+    else setTimeout(()=>nextWave(),400);
+  }
+}
+function showScPop(txt,col){const w=document.getElementById('scpopwrap');const el=document.createElement('div');el.className='scpop';el.textContent=txt;el.style.color=col;el.style.left=(25+Math.random()*50)+'%';el.style.top=(20+Math.random()*30)+'%';w.appendChild(el);setTimeout(()=>el.remove(),950);}
+function winGame(){
+  clearInterval(MG.timer);MG.running=false;MG.cur=null;
+  const lv=MG.lvl;S.silver+=lv.rslv;S.exp+=lv.rexp;S.done.add(lv.id);
+  document.getElementById('hudslv').textContent=S.silver;updateProgress();
+  const i=LEVELS.findIndex(l=>l.id===lv.id);const el=document.getElementById('myst'+i);
+  if(el){el.innerHTML='<div class="myst-lbl">✅ Hoàn thành</div><span>✅</span>';el.classList.add('done');}
+  if(lv.rcard){S.cards.add(lv.rcard);updateProgress();}
+  document.getElementById('vicscore').textContent=MG.score;
+  const rl=document.getElementById('vrwlist');rl.innerHTML='';
+  if(lv.rslv){const d=document.createElement('div');d.className='rwit';d.innerHTML=`<span class="rwic">🪙</span><span class="rwam">${lv.rslv} Bạc</span>`;rl.appendChild(d);}
+  if(lv.rexp){const d=document.createElement('div');d.className='rwit';d.innerHTML=`<span class="rwic">⭐</span><span class="rwam">${lv.rexp} XP</span>`;rl.appendChild(d);}
+  if(lv.rcard){const card=ALL_CARDS.find(c=>c.id===lv.rcard);const sp=SPECIES[card.sid];const d=document.createElement('div');d.className='rwit';d.innerHTML=`<div class="rw-card ${sp.rarity}"><span class="rw-card-em">${sp.em}</span><span class="rw-card-lbl">Bạn Có<br>Biết?</span></div><span class="rwam">1 Thẻ</span>`;rl.appendChild(d);}
+  document.getElementById('vicpop').classList.add('on');
+}
+function loseGame(){MG.cur=null;S.energy++;document.getElementById('hudnrg').textContent=S.energy+'/200';document.getElementById('defpop').classList.add('on');}
+function usePU(type){
+  if(type==='hint'){if(MG.hintU||document.getElementById('puhint').classList.contains('dis'))return;MG.hintU=true;document.getElementById('puhint').classList.add('dis');document.getElementById('puhintcnt').textContent='✓';if(MG.cur)document.getElementById('reqicon').textContent=FOODS.find(f=>f.id===MG.cur.food).em;toast('💡 Gợi ý!');}
+  else if(type==='time'){if(MG.timeU||document.getElementById('putime').classList.contains('dis'))return;MG.timeU=true;document.getElementById('putime').classList.add('dis');document.getElementById('putimecnt').textContent='✓';MG.t=Math.min(MG.lvl.tl,MG.t+5);document.getElementById('mgtimer').textContent='00:'+String(MG.t).padStart(2,'0');toast('⏱️ +5 giây!');}
+  else if(type==='focus'){if(MG.focusCD||document.getElementById('pufocus').classList.contains('dis'))return;MG.focusCD=true;MG.focusOn=true;document.getElementById('pufocus').classList.add('dis');if(MG.cur)document.getElementById('reqicon').textContent=FOODS.find(f=>f.id===MG.cur.food).em;toast('🎯 Tập trung 6s!');let cd=6;document.getElementById('pufocuscnt').textContent=cd+'s';const iv=setInterval(()=>{cd--;document.getElementById('pufocuscnt').textContent=cd+'s';if(cd<=0){clearInterval(iv);MG.focusCD=false;MG.focusOn=false;document.getElementById('pufocus').classList.remove('dis');document.getElementById('pufocuscnt').textContent='✓';if(MG.cur)document.getElementById('reqicon').textContent='?';}},1000);}
+}
+function resetPUs(){['puhint','putime','pufocus'].forEach(id=>document.getElementById(id).classList.remove('dis'));document.getElementById('puhintcnt').textContent='1x';document.getElementById('putimecnt').textContent='1x';document.getElementById('pufocuscnt').textContent='✓';}
+function clearFoodHi(){document.querySelectorAll('.fi').forEach(e=>e.classList.remove('hi','wr'));}
+
+// ============================================================
+// POPUPS / RESULT
+// ============================================================
+function showExitPopup(){document.getElementById('expop').classList.add('on');}
+function hideExit(){document.getElementById('expop').classList.remove('on');}
+function doExit(){hideExit();clearInterval(MG.timer);MG.running=false;MG.cur=null;document.getElementById('mgs').classList.remove('on');document.getElementById('mgan').style.visibility='visible';S.energy++;document.getElementById('hudnrg').textContent=S.energy+'/200';LVL_IN.fill(false);setTimeout(()=>LVL_IN.fill(false),1500);}
+function closeResult(){document.getElementById('vicpop').classList.remove('on');document.getElementById('defpop').classList.remove('on');document.getElementById('mgs').classList.remove('on');document.getElementById('mgan').style.visibility='visible';LVL_IN.fill(false);setTimeout(()=>LVL_IN.fill(false),2000);}
+function replayLvl(){document.getElementById('vicpop').classList.remove('on');document.getElementById('defpop').classList.remove('on');const idx=LEVELS.findIndex(l=>l.id===MG.lvl.id);LVL_IN.fill(false);setTimeout(()=>startMG(idx),200);}
+function goBack(){document.getElementById('cols').classList.remove('on');document.getElementById('quests').classList.remove('on');}
+
+// ============================================================
+// COLLECTION (image 1 wooden style)
+// ============================================================
+function showColl(){buildColl();document.getElementById('cols').classList.add('on');}
+function hideColl(){document.getElementById('cols').classList.remove('on');document.getElementById('sp-detail').classList.remove('on');}
+
+function buildColl(){
+  const g=document.getElementById('sp-grid');g.innerHTML='';
+  let completed=0;
+  ['nai','men','muong'].forEach(sid=>{
+    const sp=SPECIES[sid];
+    const spCards=ALL_CARDS.filter(c=>c.sid===sid);
+    const cnt=spCards.filter(c=>S.cards.has(c.id)).length;
+    if(cnt===6)completed++;
+    const isComplete=cnt===6;
+    const frameClass=sid==='men'?'rare-frame':'threatened-frame';
+    const bgClass=sid==='men'?'rare-bg':'threatened-bg';
+    const badgeClass=sid==='men'?'rare':'threatened';
+    const pct=Math.round(cnt/6*100);
+    const card=document.createElement('div');
+    card.className=`sp-card ${frameClass}${isComplete?' sp-complete':''}`;
+    const spImgSrc={'nai':'Asset/Group/Group88.png','men':'Asset/Group/Group88.png'}[sid];
+    card.innerHTML=`
+      <div class="sp-img-area ${bgClass}">
+        ${isComplete?'<div style="position:absolute;top:5px;right:5px;background:#FFD700;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;">✓</div>':''}
+        <span class="sp-rarity-badge ${badgeClass}">${sp.rarityLabel}</span>
+        ${spImgSrc?`<img src="${spImgSrc}" alt="${sp.name}" style="width:62px;height:62px;object-fit:contain;filter:drop-shadow(1px 3px 4px rgba(0,0,0,.4));${sid==='men'?'transform:scaleX(-1);':''}">`:`<span class="sp-em">${sp.em}</span>`}
+      </div>
+      <div class="sp-bottom">
+        <div class="sp-title">${sp.name}</div>
+        <div class="sp-prog-bar"><div class="sp-prog-fill" style="width:${pct}%"></div></div>
+        <div class="sp-prog-text">${cnt}/6 mảnh</div>
+      </div>`;
+    card.onclick=()=>showSpDetail(sid);
+    g.appendChild(card);
+  });
+  document.getElementById('colcnt').textContent=`${completed} / 3 bộ hoàn thành`;
+}
+
+function showSpDetail(sid){
+  const sp=SPECIES[sid];const spCards=ALL_CARDS.filter(c=>c.sid===sid);
+  const cnt=spCards.filter(c=>S.cards.has(c.id)).length;
+  document.getElementById('sp-det-em').textContent=sp.em;
+  document.getElementById('sp-det-name').textContent=sp.name;
+  const rEl=document.getElementById('sp-det-rarity');
+  rEl.textContent=sp.rarityLabel+' · '+cnt+'/6 mảnh';
+  rEl.className=sid==='men'?'det-rarity-rare':'det-rarity-threatened';
+  const imgEl=document.getElementById('sp-det-img');
+  imgEl.className=`sp-det-img-${sp.rarity==='rare'?'rare':'threatened'}`;
+  const detImgSrc={'nai':'Asset/Group/Group88.png','men':'Asset/Group/Group88.png'}[sid];
+  imgEl.innerHTML=detImgSrc?`<img id="sp-det-em" src="${detImgSrc}" alt="${sp.name}" style="width:50px;height:50px;object-fit:contain;${sid==='men'?'transform:scaleX(-1);':''}">`:`<span id="sp-det-em">${sp.em}</span>`;
+  // Milestones
+  const ms=[2,4,6];const reached=cnt;
+  ms.forEach((v,i)=>{
+    const el=document.getElementById('ms'+i);const line=document.getElementById('msline'+i);
+    if(reached>=v){el.className='ms-check done';el.textContent='✓';}
+    else if(i===0&&reached>0||reached>=ms[i-1]){el.className='ms-check active';el.textContent=v;}
+    else{el.className='ms-check';el.textContent=v;}
+    if(line){line.className='ms-line'+(reached>=(i===0?2:ms[i])?'done':'');}
+  });
+  document.getElementById('ms-fill').style.width=Math.min(100,Math.round(cnt/6*100))+'%';
+  // Type buttons
+  const grid=document.getElementById('sp-type-grid');grid.innerHTML='';
+  spCards.forEach(cd=>{
+    const col=S.cards.has(cd.id);
+    const btn=document.createElement('button');
+    btn.className=`sp-type-btn${!col?' sp-type-locked':''}`;
+    btn.innerHTML=`<span class="sp-type-em">${col?TYPE_EM[cd.type]:'🔒'}</span><span class="sp-type-lbl">${TYPE_LABEL[cd.type]}</span>`;
+    if(col)btn.onclick=()=>selectCardType(cd.id);
+    grid.appendChild(btn);
+  });
+  document.getElementById('sp-content-title').textContent='← Chọn mảnh để xem thông tin';
+  document.getElementById('sp-content-text').textContent='Nhấn vào mảnh thẻ bên trên để xem nội dung tương ứng.';
+  document.getElementById('sp-content-text').style.color='rgba(200,160,80,.5)';
+  document.getElementById('sp-content-text').style.fontStyle='italic';
+  document.getElementById('sp-detail').classList.add('on');
+}
+
+function selectCardType(cid){
+  document.querySelectorAll('.sp-type-btn').forEach(b=>b.classList.remove('sp-type-active'));
+  const content=CARD_CONTENT[cid];const card=ALL_CARDS.find(c=>c.id===cid);
+  document.getElementById('sp-content-title').textContent=`${TYPE_EM[card.type]} ${TYPE_LABEL[card.type]}`;
+  document.getElementById('sp-content-text').textContent=content||'Thông tin chưa có.';
+  document.getElementById('sp-content-text').style.color='rgba(220,190,140,.9)';
+  document.getElementById('sp-content-text').style.fontStyle='normal';
+  event.currentTarget.classList.add('sp-type-active');
+}
+
+function closeSpDetail(){document.getElementById('sp-detail').classList.remove('on');}
+
+// ============================================================
+// QUEST / MISSION SCREEN (image 3 style)
+// ============================================================
+function getMissionProg(id){
+  switch(id){
+    case'dm1':return MissP.dm1;
+    case'dm3':return Math.min(2,S.done.size);
+    default:return MissP[id]||0;
+  }
+}
+function getRewardIcon(r){
+  const m={xp:'🔵',silver:'🪙',heo_vang:'🐷',stamina:'⚡'};return m[r]||'🎁';
+}
+function getRewardLabel(r,q){
+  const m={xp:'XP',silver:'Bạc',heo_vang:'Heo Vàng',stamina:'Năng lượng'};return q+(m[r]?' '+m[r]:'');
+}
+
+function showQuests(){buildQuests();document.getElementById('quests').classList.add('on');}
+function hideQuests(){document.getElementById('quests').classList.remove('on');}
+
+function buildQuests(){
+  // Total progress
+  const total=DAILY_MISSIONS.length;
+  const done=DAILY_MISSIONS.filter(m=>getMissionProg(m.id)>=m.target).length;
+  document.getElementById('qp-num').textContent=done+'/'+total;
+  document.getElementById('qp-fill').style.width=Math.round(done/total*100)+'%';
+  // Milestones row
+  const msDiv=document.getElementById('qp-ms');msDiv.innerHTML='';
+  TOTAL_MILESTONES.forEach(ms=>{
+    const d=document.createElement('div');d.className='qp-ms';
+    const reached=done>=ms.t;
+    d.innerHTML=`<span class="qp-ms-icon" style="filter:${reached?'none':'grayscale(1)'};">${ms.r}</span><span class="qp-ms-val">${ms.t}</span>`;
+    msDiv.appendChild(d);
+  });
+  // Mission list
+  const list=document.getElementById('quest-list');list.innerHTML='';
+  DAILY_MISSIONS.forEach(m=>{
+    const prog=getMissionProg(m.id);const pct=Math.min(100,Math.round(prog/m.target*100));
+    const complete=prog>=m.target;const claimed=MissP.claimed.has(m.id);
+    const desc=m.desc.replace('{0}',m.target);
+    const item=document.createElement('div');item.className='qitem';
+    let btnHtml='';
+    if(claimed){btnHtml=`<button class="qbtn-done">Đã nhận</button>`;}
+    else if(complete){btnHtml=`<button class="qbtn-claim" onclick="claimMission('${m.id}')">Nhận</button>`;}
+    else{btnHtml=`<button class="qbtn-go" onclick="toast('🚀 Đang đi ngay!')">Đi ngay</button>`;}
+    const pfillClass=complete?'complete':pct>0?'partial':'empty';
+    item.innerHTML=`
+      <div class="qitem-left">
+        <div class="qitem-desc">${desc}</div>
+        <div class="qitem-pbar"><div class="qitem-pfill ${pfillClass}" style="width:${pct}%"></div><div class="qitem-ptext">${prog}/${m.target}</div></div>
+      </div>
+      <div class="qitem-right">
+        <div class="qitem-rewards">
+          ${m.r1?`<div class="qitem-rw"><span class="qitem-rw-ic">${getRewardIcon(m.r1)}</span><span class="qitem-rw-val">${m.r1q}</span></div>`:''}
+          ${m.r2?`<div class="qitem-rw"><span class="qitem-rw-ic">${getRewardIcon(m.r2)}</span><span class="qitem-rw-val">${m.r2q}</span></div>`:''}
+        </div>
+        ${btnHtml}
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function claimMission(id){
+  MissP.claimed.add(id);toast('🎉 Nhận phần thưởng thành công!');buildQuests();
+}
+function switchQTab(type,btn){
+  document.querySelectorAll('.qtab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  if(type!=='daily'){toast('🚧 Tính năng sắp ra mắt!');}
+}
+
+// ============================================================
+// TUTORIAL & TOAST
+// ============================================================
+const TUT=[{e:'🗺️',t:'Dùng joystick di chuyển. Thu thập thẻ sinh vật trên bản đồ! Cảnh báo: cây và sông là vật cản!'},{e:'⭐',t:'Tìm Điểm Bí Ẩn ⭐ trên bản đồ để mở mini-game. Đi qua cầu để sang bờ sông!'},{e:'🍯',t:'Chọn đúng món ăn loài thú muốn để ghi điểm. Dùng Công Cụ hỗ trợ khi cần!'}];
+let tutIdx=0;
+function nextTut(){tutIdx++;if(tutIdx>=TUT.length){document.getElementById('tutov').style.display='none';return;}const s=TUT[tutIdx];document.getElementById('tutem').textContent=s.e;document.getElementById('tuttxt').textContent=s.t;TUT.forEach((_,i)=>{const d=document.getElementById('td'+i);if(d)d.className='tdot'+(i===tutIdx?' on':'');});if(tutIdx===TUT.length-1)document.querySelector('.tutnxt').textContent='BẮT ĐẦU! 🎮';}
+function toast(msg){document.querySelectorAll('.toast').forEach(e=>e.remove());const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('G').appendChild(el);setTimeout(()=>el.remove(),2600);}
+</script>
+</body>
+</html>
